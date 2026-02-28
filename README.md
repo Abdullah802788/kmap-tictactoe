@@ -294,6 +294,31 @@ This project sits at a unique intersection of disciplines, making it ideal for a
 
 ---
 
+---
+
+## 📖 Interactive Logic Walkthrough
+
+Want to *visually* understand how the AI works?
+
+This project includes a fully interactive educational webpage that explains the entire system step-by-step — from Boolean variables to Karnaugh Maps to the final decision pipeline.
+
+It’s designed like a mini technical article and contains:
+
+✨ Interactive Tic-Tac-Toe board showing live Boolean variables  
+✨ Animated win-detection diagrams  
+✨ Visual introduction to Karnaugh Maps  
+✨ AI decision pipeline flowchart  
+✨ Simple explanation of why the AI never loses  
+
+### Open the explainer
+
+After downloading the project, simply open:
+
+```bash
+how_it_works.html
+```
+---
+
 ## 🛠 Tech Stack
 
 | Component | Technology |
