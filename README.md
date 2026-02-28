@@ -176,9 +176,6 @@ kmap-tictactoe/
 │   └── widgets.py          #   Custom reusable UI components
 │
 └── assets/                 # 🎨 Static Assets
-    ├── fonts/              #   Custom typography
-    ├── icons/              #   UI icons
-    ├── images/             #   Graphics & screenshots
     └── sounds/             #   Generated WAV sound effects
 ```
 
