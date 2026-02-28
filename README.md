@@ -43,6 +43,21 @@ That evening, the first lines of Python were written. A board encoded as 18 Bool
 
 ## 🎯 What Is This?
 
+---
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="assets/screenshots/menu.png" width="45%" />
+  <img src="assets/screenshots/game.png" width="45%" />
+</p>
+
+<p align="center">
+  <sub>Left: Main Menu • Right: In-Game Board (Draw vs AI)</sub>
+</p>
+
+---
+
 This is a **modern Python desktop application** where you play Tic-Tac-Toe against an unbeatable AI — but the AI doesn't work the way you'd expect.
 
 Every Tic-Tac-Toe AI you've ever seen uses one of these:
