@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the K-Map Tic-Tac-Toe AI Works</title>
+<style>
+  :root {
+    --bg-color: #050505;
+    --text-primary: #ffffff;
+    --text-secondary: #888888;
+    --accent-cyan: #00f3ff;
+    --accent-purple: #bc13fe;
+    --accent-pink: #ff003c;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover: rgba(255, 255, 255, 0.06);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  
+  * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0;
+  }
+  
+  body {
+    font-family: var(--font);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+  
+  /* SIDEBAR NAVIGATION */
+  .sidebar {
+    width: 280px;
+    position: fixed;
+    height: 100vh;
+    padding: 60px 30px;
+    border-right: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: rgba(5, 5, 5, 0.8);
+    backdrop-filter: blur(20px);
+    z-index: 100;
+  }
+  .sidebar h2 {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .sidebar a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 12px 16px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+  .sidebar a:hover, .sidebar a.active {
+    color: var(--text-primary);
+    background: var(--glass-bg);
+    box-shadow: inset 3px 0 0 var(--accent-cyan);
+  }
+
+  /* MAIN CONTENT LAYOUT */
+  .content {
+    margin-left: 280px;
+    flex: 1;
+    padding: 0 60px;
+    max-width: 1100px;
+  }
+  
+  section {
+    min-height: 100vh;
+    padding: 100px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+  section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* TYPOGRAPHY */
+  h1 { 
+    font-size: 4.5rem; 
+    margin-bottom: 20px; 
+    line-height: 1.1; 
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+  }
+  h2 { font-size: 2.5rem; margin-bottom: 20px; font-weight: 700; color: var(--text-primary); }
+  p { font-size: 1.2rem; color: var(--text-secondary); line-height: 1.7; max-width: 650px; margin-bottom: 20px; }
+  
+  /* GLASS CARDS */
+  .card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 50px;
+    backdrop-filter: blur(20px);
+    margin-top: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 50px;
+    align-items: center;
+  }
+
+  /* 2. BOARD TO BOOLEAN */
+  .tictactoe-board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 12px;
+  }
+  .cell {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  }
+  .cell:hover {
+    background: var(--glass-hover);
+    transform: scale(1.05);
+  }
+  .cell.x { color: var(--accent-cyan); text-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+  .cell.o { color: var(--accent-pink); text-shadow: 0 0 15px rgba(255, 0, 60, 0.4); }
+  
+  .variables {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    background: rgba(0,0,0,0.4);
+    padding: 30px;
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+  }
+  .var-highlight { color: var(--text-primary); font-weight: bold; }
+  .var-x { color: var(--accent-cyan); text-shadow: 0 0 5px var(--accent-cyan); }
+  .var-o { color: var(--accent-pink); text-shadow: 0 0 5px var(--accent-pink); }
+
+  /* 3. WIN DETECTION */
+  .win-container { display: flex; align-items: center; justify-content: space-between; gap: 50px; width: 100%; }
+  .win-board { position: relative; width: 300px; height: 300px; flex-shrink: 0; }
+  .win-board-grid {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 12px;
+  }
+  .win-cell { background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border); }
+  .win-svg { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 10; }
+  
+  .win-line { 
+    stroke: var(--accent-cyan); 
+    stroke-width: 10; 
+    stroke-linecap: round; 
+    fill: none; 
+    stroke-dasharray: 400; 
+    stroke-dashoffset: 400; 
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 0 10px var(--accent-cyan)); 
+  }
+  .win-line.active { stroke-dashoffset: 0; }
+  
+  .formula-box { 
+    background: rgba(0, 243, 255, 0.05); 
+    border: 1px solid var(--accent-cyan); 
+    padding: 30px; 
+    border-radius: 16px; 
+    font-family: 'Courier New', Courier, monospace; 
+    font-size: 1.5rem; 
+    font-weight: bold;
+    color: var(--accent-cyan); 
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.1); 
+    min-width: 350px;
+    text-align: center;
+  }
+
+  /* 4. K-MAP */
+  .kmap-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  .kmap-grid {
+    display: grid;
+    grid-template-columns: 50px repeat(4, 70px);
+    grid-template-rows: 50px repeat(4, 70px);
+    gap: 4px;
+    text-align: center;
+    position: relative;
+    margin-bottom: 30px;
+  }
+  .kmap-hdr { display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--text-secondary); font-weight: bold; }
+  .kmap-cell {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: monospace; font-size: 1.5rem; color: var(--text-secondary);
+    position: relative;
+    z-index: 2;
+  }
+  .kmap-cell.one { color: var(--text-primary); }
+  
+  /* Abstract K-Map Groupings using grid-area mapping */
+  .kmap-group {
+    border: 3px dashed var(--accent-cyan);
+    background: rgba(0, 243, 255, 0.15);
+    border-radius: 12px;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+  }
+  .kmap-group.active { 
+    opacity: 1; 
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.4); 
+  }
+  #kg1 { grid-area: 3 / 3 / 5 / 5; }
+  #kg2 { grid-area: 4 / 2 / 6 / 3; border-color: var(--accent-pink); background: rgba(255, 0, 60, 0.15); box-shadow: 0 0 20px rgba(255, 0, 60, 0.4); }
+
+  /* 5. DECISION PIPELINE */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .pipe-node {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    padding: 18px 24px;
+    border-radius: 16px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
+  }
+  .pipe-node:hover {
+    transform: scale(1.03) translateY(-2px);
+    background: rgba(188, 19, 254, 0.05);
+    border-color: var(--accent-purple);
+    box-shadow: 0 10px 30px rgba(188, 19, 254, 0.2);
+    color: var(--accent-purple);
+  }
+  .pipe-arrow {
+    text-align: center; color: var(--text-secondary); font-size: 1.5rem; line-height: 1; margin: -5px 0;
+  }
+
+  /* 6. GAME THEORY */
+  .theory-compare { display: flex; gap: 40px; width: 100%; }
+  .theory-box { flex: 1; background: var(--glass-bg); border-radius: 24px; padding: 40px; text-align: center; border: 1px solid var(--glass-border); }
+  .theory-box h3 { font-size: 1.5rem; margin-bottom: 20px; }
+  
+  .big-statement {
+    text-align: center; 
+    margin-top: 80px; 
+    font-size: 3.5rem; 
+    line-height: 1.2;
+    font-weight: 800; 
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink)); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* RESPONSIVE DESIGN */
+  @media (max-width: 1000px) {
+    .sidebar { display: none; }
+    .content { margin-left: 0; padding: 0 30px; }
+    h1 { font-size: 3rem; }
+  }
+  @media (max-width: 768px) {
+    .win-container, .theory-compare { flex-direction: column; }
+    .card { padding: 30px; }
+    .tictactoe-board { grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(3, 80px); }
+    .cell { font-size: 2.5rem; }
+    .big-statement { font-size: 2.5rem; }
+  }
+
+  /* BACKGROUND ANIMATION */
+  .bg-anim { position: fixed; top:0; left:0; width:100vw; height:100vh; z-index: -1; pointer-events: none; overflow: hidden; opacity: 0.04; }
+  .bg-symbol { position: absolute; font-size: 15vw; font-weight: bold; color: #ffffff; user-select: none; animation: float 25s infinite linear; }
+  
+  @keyframes float {
+    0% { transform: translateY(110vh) rotate(0deg); }
+    100% { transform: translateY(-30vh) rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-anim" id="bgAnim"></div>
+
+<nav class="sidebar">
+  <h2>K-Map AI Logic</h2>
+  <a href="#hero" class="active">Introduction</a>
+  <a href="#boolean">Board to Boolean</a>
+  <a href="#win">Win Detection</a>
+  <a href="#kmap">What is a K-Map?</a>
+  <a href="#pipeline">Decision Pipeline</a>
+  <a href="#game-theory">Game Theory</a>
+</nav>
+
+<main class="content">
+
+  <!-- 1. HERO SECTION -->
+  <section id="hero">
+    <h1>How the K-Map<br>Tic-Tac-Toe AI Works</h1>
+    <p style="font-size: 1.5rem; color: var(--text-primary); font-weight: 500;">From Boolean algebra to unbeatable gameplay</p>
+    <p>Discover how a completely invincible Tic-Tac-Toe AI is built without using Minimax, search trees, or machine learning. Instead, it relies purely on cold, hard Boolean logic and Karnaugh Maps to hardcode perfection into logic gates.</p>
+  </section>
+
+  <!-- 2. BOOLEAN SECTION -->
+  <section id="boolean">
+    <h2>1. From Board to Boolean Variables</h2>
+    <p>To use logic gates, we must convert the 3×3 grid into 1s and 0s. Every cell on the board is represented by exactly two variables: one tracking if it is an X, and one tracking if it is an O.</p>
+    <div class="card">
+      <div>
+        <div class="tictactoe-board" id="interactiveBoard">
+          <!-- Populated by JS -->
+        </div>
+        <p style="text-align:center; font-size:0.95rem; margin-top:20px; color: var(--accent-cyan);">Click cells to toggle state.</p>
+      </div>
+      <div class="variables" id="varDisplay">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. WIN DETECTION -->
+  <section id="win">
+    <h2>2. Win Detection via Sum-of-Products</h2>
+    <p>A player wins if they occupy a full row, column, or diagonal. We express this using a boolean formula combining AND (·) and OR (+) logic. There are exactly 8 ways to win.</p>
+    <div class="card win-container">
+      <div class="win-board">
+        <div class="win-board-grid">
+          <div class="win-cell"></div><div class="win-cell"></div><div class="win-cell"></div>
+          <div class="win-cell"></div><div class="win-cell"></div><div class="win-cell"></div>
+          <div class="win-cell"></div><div class="win-cell"></div><div class="win-cell"></div>
+        </div>
+        <svg class="win-svg" viewBox="0 0 300 300">
+          <!-- Rows -->
+          <path id="wl-0" class="win-line" d="M 20 50 L 280 50"></path>
+          <path id="wl-1" class="win-line" d="M 20 150 L 280 150"></path>
+          <path id="wl-2" class="win-line" d="M 20 250 L 280 250"></path>
+          <!-- Cols -->
+          <path id="wl-3" class="win-line" d="M 50 20 L 50 280"></path>
+          <path id="wl-4" class="win-line" d="M 150 20 L 150 280"></path>
+          <path id="wl-5" class="win-line" d="M 250 20 L 250 280"></path>
+          <!-- Diagonals -->
+          <path id="wl-6" class="win-line" d="M 20 20 L 280 280"></path>
+          <path id="wl-7" class="win-line" d="M 280 20 L 20 280"></path>
+        </svg>
+      </div>
+      <div>
+        <div class="formula-box" id="formulaBox">
+          WIN_X = X0·X1·X2
+        </div>
+        <p style="margin-top:25px; font-size: 1.1rem;">The AI evaluates this instantly. Every simulation tick, the entire board state physically falls through these logic gates to determine a win status.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. KMAP SECTION -->
+  <section id="kmap">
+    <h2>3. Simplifying with Karnaugh Maps</h2>
+    <p>Writing formulas for "should I fork" or "should I block" manually is impossible. Karnaugh maps (K-Maps) allow us to visually group 1s in a grid to mathematically guarantee the simplest possible boolean expression.</p>
+    <div class="card kmap-wrapper">
+      <div class="kmap-grid">
+        <div></div>
+        <div class="kmap-hdr">00</div><div class="kmap-hdr">01</div><div class="kmap-hdr">11</div><div class="kmap-hdr">10</div>
+        
+        <div class="kmap-hdr">00</div><div class="kmap-cell">0</div><div class="kmap-cell">0</div><div class="kmap-cell">0</div><div class="kmap-cell">0</div>
+        <div class="kmap-hdr">01</div><div class="kmap-cell">0</div><div class="kmap-cell one">1</div><div class="kmap-cell one">1</div><div class="kmap-cell">0</div>
+        <div class="kmap-hdr">11</div><div class="kmap-cell">0</div><div class="kmap-cell one">1</div><div class="kmap-cell one">1</div><div class="kmap-cell">0</div>
+        <div class="kmap-hdr">10</div><div class="kmap-cell one">1</div><div class="kmap-cell">0</div><div class="kmap-cell">0</div><div class="kmap-cell">0</div>
+        
+        <!-- Interactive Group Overlays -->
+        <div class="kmap-group" id="kg1"></div>
+        <div class="kmap-group" id="kg2"></div>
+      </div>
+      <p style="font-family:'Courier New', Courier, monospace; font-size:1.6rem; font-weight: bold; color:var(--accent-cyan); margin: 0;" id="kmapFormula">F = A'B + CD'</p>
+    </div>
+  </section>
+
+  <!-- 5. PIPELINE SECTION -->
+  <section id="pipeline">
+    <h2>4. The Decision Pipeline</h2>
+    <p>The AI does not think ahead. Instead, it runs the board state through 7 strict, cascaded boolean rule modules simultaneously. The highest-priority module that outputs a "1" gets to choose the move.</p>
+    <div class="card">
+      <div class="pipeline">
+        <div class="pipe-node">1. Win (Can I win directly?)</div>
+        <div class="pipe-arrow">↓</div>
+        <div class="pipe-node">2. Block (Will I lose next turn?)</div>
+        <div class="pipe-arrow">↓</div>
+        <div class="pipe-node">3. Fork (Create a double threat)</div>
+        <div class="pipe-arrow">↓</div>
+        <div class="pipe-node">4. Block Fork (Force opponent defense)</div>
+        <div class="pipe-arrow">↓</div>
+        <div class="pipe-node">5. Center (Take the middle)</div>
+        <div class="pipe-arrow">↓</div>
+        <div class="pipe-node">6. Corner (Take strategic corners)</div>
+        <div class="pipe-arrow">↓</div>
+        <div class="pipe-node">7. Side (Take any remaining edge)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. GAME THEORY SECTION -->
+  <section id="game-theory">
+    <h2>5. Why It Never Loses</h2>
+    <p>Traditional algorithms traverse a combinatorial Game Tree searching for good moves. This K-Map AI collapses the entire universe of Tic-Tac-Toe possibilities into instantaneous true/false truths.</p>
+    <div class="theory-compare">
+      <div class="theory-box">
+        <h3 style="color:var(--text-secondary);">Minimax (Search Tree)</h3>
+        <svg viewBox="0 0 100 100" style="width:100%; max-width: 140px; margin: 0 auto 20px auto; display: block; stroke:var(--text-secondary); fill:none; stroke-width:3;">
+          <circle cx="50" cy="15" r="5" fill="var(--glass-bg)"/>
+          <path d="M 50 22 L 25 43 M 50 22 L 75 43"/>
+          <circle cx="25" cy="50" r="5" fill="var(--glass-bg)"/>
+          <circle cx="75" cy="50" r="5" fill="var(--glass-bg)"/>
+          <path d="M 25 57 L 10 78 M 25 57 L 40 78 M 75 57 L 60 78 M 75 57 L 90 78"/>
+          <circle cx="10" cy="85" r="4" fill="var(--glass-bg)"/><circle cx="40" cy="85" r="4" fill="var(--glass-bg)"/>
+          <circle cx="60" cy="85" r="4" fill="var(--glass-bg)"/><circle cx="90" cy="85" r="4" fill="var(--glass-bg)"/>
+        </svg>
+        <p style="font-size:1rem; margin:0;">Explores thousands of branches.<br>Slow, recursive, reactive.</p>
+      </div>
+      <div class="theory-box" style="border-color:var(--accent-cyan); box-shadow:0 0 30px rgba(0,243,255,0.08);">
+        <h3 style="color:var(--accent-cyan);">K-Map Logic (Ours)</h3>
+        <svg viewBox="0 0 100 100" style="width:100%; max-width: 140px; margin: 0 auto 20px auto; display: block; stroke:var(--accent-cyan); fill:none; stroke-width:3;">
+          <rect x="15" y="20" width="20" height="20" rx="4" fill="rgba(0,243,255,0.1)"/>
+          <rect x="15" y="60" width="20" height="20" rx="4" fill="rgba(0,243,255,0.1)"/>
+          <path d="M 37 30 L 65 40 M 37 70 L 65 60"/>
+          <path d="M 65 30 V 70 Q 80 50 65 30" style="fill:rgba(0,243,255,0.1);"/>
+          <path d="M 80 50 L 95 50"/>
+        </svg>
+        <p style="font-size:1rem; margin:0;">O(1) time complexity logic.<br>Evaluates exactly once per turn.</p>
+      </div>
+    </div>
+    <div class="big-statement">
+      No search. No randomness.<br>Just logic.
+    </div>
+  </section>
+
+</main>
+
+<script>
+// --- SCROLL ANIMATIONS / STICKY NAV ---
+const sections = document.querySelectorAll('section');
+const navLinks = document.querySelectorAll('.sidebar a');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      navLinks.forEach(link => {
+        if(link.getAttribute('href') === '#' + entry.target.id) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    }
+  });
+}, { threshold: 0.25 });
+
+sections.forEach(sec => observer.observe(sec));
+
+// --- BACKGROUND FLOATERS ---
+const bgAnim = document.getElementById('bgAnim');
+const symbols = ['X', 'O'];
+for(let i=0; i<15; i++) {
+  let el = document.createElement('div');
+  el.className = 'bg-symbol';
+  el.innerText = symbols[Math.floor(Math.random()*2)];
+  el.style.left = (Math.random() * 100) + 'vw';
+  el.style.animationDuration = (20 + Math.random() * 30) + 's';
+  el.style.animationDelay = '-' + (Math.random() * 20) + 's';
+  el.style.opacity = (Math.random() * 0.4 + 0.1).toString();
+  el.style.fontSize = (8 + Math.random() * 12) + 'vw';
+  bgAnim.appendChild(el);
+}
+
+// --- BOOLEAN INTERACTIVE BOARD ---
+const boardDiv = document.getElementById('interactiveBoard');
+const varDiv = document.getElementById('varDisplay');
+let boardState = Array(9).fill(null); 
+
+function renderBooleanBoard() {
+  boardDiv.innerHTML = '';
+  varDiv.innerHTML = '';
+  
+  // Render Grid
+  boardState.forEach((val, i) => {
+    let cell = document.createElement('div');
+    cell.className = 'cell ' + (val ? val.toLowerCase() : '');
+    cell.innerText = val ? val : '';
+    cell.onclick = () => {
+      if(val === null) boardState[i] = 'X';
+      else if(val === 'X') boardState[i] = 'O';
+      else boardState[i] = null;
+      renderBooleanBoard();
+    };
+    boardDiv.appendChild(cell);
+  });
+
+  // Render Variables Panel
+  for(let i=0; i<9; i++) {
+    let xVal = boardState[i] === 'X' ? 1 : 0;
+    let oVal = boardState[i] === 'O' ? 1 : 0;
+    
+    let xCls = xVal ? 'var-x var-highlight' : '';
+    let oCls = oVal ? 'var-o var-highlight' : '';
+    
+    let line = document.createElement('div');
+    line.innerHTML = `Cell ${i}: <span class="${xCls}">X${i}=${xVal}</span> &nbsp; <span class="${oCls}">O${i}=${oVal}</span>`;
+    varDiv.appendChild(line);
+  }
+}
+renderBooleanBoard();
+
+// --- WIN DETECTION ANIMATOR ---
+const winPaths = document.querySelectorAll('.win-line');
+const formulas = [
+  "WIN_X = X0·X1·X2",
+  "WIN_X = X3·X4·X5",
+  "WIN_X = X6·X7·X8",
+  "WIN_X = X0·X3·X6",
+  "WIN_X = X1·X4·X7",
+  "WIN_X = X2·X5·X8",
+  "WIN_X = X0·X4·X8",
+  "WIN_X = X2·X4·X6"
+];
+let currentWinLine = 0;
+setInterval(() => {
+  winPaths.forEach(l => l.classList.remove('active'));
+  winPaths[currentWinLine].classList.add('active');
+  document.getElementById('formulaBox').innerText = formulas[currentWinLine];
+  currentWinLine = (currentWinLine + 1) % 8;
+}, 2500);
+
+// --- K-MAP ANIMATOR ---
+let kmapToggle = true;
+setInterval(() => {
+  const g1 = document.getElementById('kg1');
+  const g2 = document.getElementById('kg2');
+  const form = document.getElementById('kmapFormula');
+  
+  if(kmapToggle) {
+    g1.classList.add('active');
+    g2.classList.remove('active');
+    form.innerHTML = "Group 1: <span style='color:var(--accent-cyan)'>A'B</span>";
+  } else {
+    g1.classList.remove('active');
+    g2.classList.add('active');
+    form.innerHTML = "Group 2: <span style='color:var(--accent-pink)'>CD'</span>";
+  }
+  kmapToggle = !kmapToggle;
+}, 3000);
+
+</script>
+</body>
+</html>
